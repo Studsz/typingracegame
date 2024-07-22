@@ -10,10 +10,21 @@
             display: block;
             margin: 0 auto;
         }
+        #mainMenu {
+            text-align: center;
+            margin-top: 50px;
+        }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="mainMenu">
+        <h1>Retro Platformer</h1>
+        <button onclick="startGame()">Start Game</button>
+    </div>
+    <canvas id="gameCanvas" class="hidden" width="800" height="600"></canvas>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -24,10 +35,12 @@
         const jumpPower = 15;
 
         let keys = [];
+        let currentLevel = 0;
+        const totalLevels = 10;
 
         let player = {
-            x: canvas.width / 2,
-            y: canvas.height - 50,
+            x: 0,
+            y: 0,
             width: 50,
             height: 50,
             speedX: 0,
@@ -35,25 +48,52 @@
             onGround: false
         };
 
-        let platforms = [
-            { x: 300, y: 500, width: 200, height: 20 },
-            { x: 600, y: 400, width: 200, height: 20 },
-            { x: 100, y: 300, width: 200, height: 20 }
+        let platforms = [];
+        let endBrick = {};
+
+        const levels = [
+            { platforms: [{ x: 100, y: 500, width: 200, height: 20 }, { x: 400, y: 400, width: 200, height: 20 }], endBrick: { x: 600, y: 350, width: 50, height: 50 } },
+            // Add more levels here
         ];
+
+        for (let i = 1; i < totalLevels; i++) {
+            levels.push({
+                platforms: [
+                    { x: 100 + i * 50, y: 500 - i * 20, width: 200, height: 20 },
+                    { x: 400 + i * 50, y: 400 - i * 20, width: 200, height: 20 }
+                ],
+                endBrick: { x: 600 + i * 50, y: 350 - i * 20, width: 50, height: 50 }
+            });
+        }
+
+        function startGame() {
+            document.getElementById('mainMenu').classList.add('hidden');
+            canvas.classList.remove('hidden');
+            loadLevel(0);
+            update();
+        }
+
+        function loadLevel(levelIndex) {
+            currentLevel = levelIndex;
+            player.x = 50;
+            player.y = canvas.height - player.height;
+            player.speedX = 0;
+            player.speedY = 0;
+            player.onGround = false;
+            platforms = levels[levelIndex].platforms;
+            endBrick = levels[levelIndex].endBrick;
+        }
 
         function update() {
             if (keys[37]) {
-                // Left arrow key
                 player.speedX = -playerSpeed;
             } else if (keys[39]) {
-                // Right arrow key
                 player.speedX = playerSpeed;
             } else {
                 player.speedX = 0;
             }
 
             if (keys[38] && player.onGround) {
-                // Up arrow key (jump)
                 player.speedY = -jumpPower;
                 player.onGround = false;
             }
@@ -81,6 +121,21 @@
                 }
             });
 
+            if (
+                player.x < endBrick.x + endBrick.width &&
+                player.x + player.width > endBrick.x &&
+                player.y < endBrick.y + endBrick.height &&
+                player.y + player.height > endBrick.y
+            ) {
+                if (currentLevel < totalLevels - 1) {
+                    loadLevel(currentLevel + 1);
+                } else {
+                    alert('Congratulations! You completed all levels!');
+                    canvas.classList.add('hidden');
+                    document.getElementById('mainMenu').classList.remove('hidden');
+                }
+            }
+
             draw();
             requestAnimationFrame(update);
         }
@@ -95,6 +150,9 @@
             platforms.forEach(platform => {
                 ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
             });
+
+            ctx.fillStyle = 'green';
+            ctx.fillRect(endBrick.x, endBrick.y, endBrick.width, endBrick.height);
         }
 
         document.addEventListener('keydown', e => {
@@ -104,8 +162,6 @@
         document.addEventListener('keyup', e => {
             keys[e.keyCode] = false;
         });
-
-        update();
     </script>
 </body>
 </html>
