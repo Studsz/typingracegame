@@ -3,101 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Typing Race Game</title>
+    <title>Retro Platformer</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
-        }
-        #race {
-            margin: 20px;
-            font-size: 1.5em;
-        }
-        #result {
-            margin: 20px;
-            font-size: 1.5em;
-            color: green;
-        }
-        #sparkTyping {
-            color: red;
+        canvas {
+            background: #87CEEB;
+            display: block;
+            margin: 0 auto;
         }
     </style>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const gravity = 0.5;
+const friction = 0.8;
+const playerSpeed = 6;
+const jumpPower = 15;
+
+let keys = [];
+
+let player = {
+    x: canvas.width / 2,
+    y: canvas.height - 50,
+    width: 50,
+    height: 50,
+    speedX: 0,
+    speedY: 0,
+    onGround: false
+};
+
+let platforms = [
+    { x: 300, y: 500, width: 200, height: 20 },
+    { x: 600, y: 400, width: 200, height: 20 },
+    { x: 100, y: 300, width: 200, height: 20 }
+];
+
+function update() {
+    if (keys[37]) {
+        // Left arrow key
+        player.speedX = -playerSpeed;
+    } else if (keys[39]) {
+        // Right arrow key
+        player.speedX = playerSpeed;
+    } else {
+        player.speedX = 0;
+    }
+
+    if (keys[38] && player.onGround) {
+        // Up arrow key (jump)
+        player.speedY = -jumpPower;
+        player.onGround = false;
+    }
+
+    player.speedY += gravity;
+    player.x += player.speedX;
+    player.y += player.speedY;
+
+    if (player.y + player.height > canvas.height) {
+        player.y = canvas.height - player.height;
+        player.speedY = 0;
+        player.onGround = true;
+    }
+
+    platforms.forEach(platform => {
+        if (
+            player.x < platform.x + platform.width &&
+            player.x + player.width > platform.x &&
+            player.y < platform.y + platform.height &&
+            player.y + player.height > platform.y
+        ) {
+            player.y = platform.y - player.height;
+            player.speedY = 0;
+            player.onGround = true;
+        }
+    });
+
+    draw();
+    requestAnimationFrame(update);
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = 'red';
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+
+    ctx.fillStyle = 'black';
+    platforms.forEach(platform => {
+        ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+    });
+}
+
+document.addEventListener('keydown', e => {
+    keys[e.keyCode] = true;
+});
+
+document.addEventListener('keyup', e => {
+    keys[e.keyCode] = false;
+});
+
+update();
+        <script>
 </head>
 <body>
-    <h1>Typing Race Game</h1>
-    <p>Type this sentence as fast as you can:</p>
-    <div id="race"></div>
-    <input type="text" id="userInput" placeholder="Start typing..." oninput="checkTyping()">
-    <div id="sparkTyping"></div>
-    <div id="result"></div>
-    <script>
-        const sentences = [
-            "The quick brown fox jumps over the lazy dog.",
-            "Hello world, welcome to the typing race!",
-            "Typing fast is a skill that can be improved with practice.",
-            "Consistency is key to becoming a proficient typist."
-        ];
-
-        let sentence = sentences[Math.floor(Math.random() * sentences.length)];
-        document.getElementById("race").textContent = sentence;
-
-        let startTime;
-        let userFinished = false;
-
-        const sparkSpeed = 80; // Spark's speed in milliseconds per character
-
-        function startSparkTyping() {
-            let sparkTypingElement = document.getElementById("sparkTyping");
-            let currentIndex = 0;
-
-            function typeNextCharacter() {
-                if (currentIndex < sentence.length) {
-                    sparkTypingElement.textContent += sentence[currentIndex];
-                    currentIndex++;
-                    setTimeout(typeNextCharacter, sparkSpeed);
-                } else {
-                    checkWinner();
-                }
-            }
-
-            typeNextCharacter();
-        }
-
-        function checkTyping() {
-            let userInput = document.getElementById("userInput").value;
-            if (userInput === sentence && !userFinished) {
-                userFinished = true;
-                let endTime = new Date().getTime();
-                let userTime = (endTime - startTime) / 1000;
-                document.getElementById("result").textContent = `You finished in ${userTime.toFixed(2)} seconds.`;
-                checkWinner();
-            }
-        }
-
-        function checkWinner() {
-            let sparkTime = (sentence.length * sparkSpeed) / 1000;
-            if (userFinished) {
-                if (document.getElementById("userInput").value === sentence) {
-                    if (sparkTime < (new Date().getTime() - startTime) / 1000) {
-                        document.getElementById("result").textContent += " Spark won!";
-                    } else {
-                        document.getElementById("result").textContent += " You won!";
-                    }
-                } else {
-                    document.getElementById("result").textContent = "You made a typo! Spark wins!";
-                }
-            } else {
-                if (document.getElementById("sparkTyping").textContent === sentence) {
-                    document.getElementById("result").textContent = "Spark won!";
-                }
-            }
-        }
-
-        window.onload = () => {
-            startTime = new Date().getTime();
-            startSparkTyping();
-        };
-    </script>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script src="game.js"></script>
 </body>
 </html>
