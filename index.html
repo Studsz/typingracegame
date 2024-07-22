@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Race Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        #race {
+            margin: 20px;
+            font-size: 1.5em;
+        }
+        #result {
+            margin: 20px;
+            font-size: 1.5em;
+            color: green;
+        }
+        #sparkTyping {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Typing Race Game</h1>
+    <p>Type this sentence as fast as you can:</p>
+    <div id="race"></div>
+    <input type="text" id="userInput" placeholder="Start typing..." oninput="checkTyping()">
+    <div id="sparkTyping"></div>
+    <div id="result"></div>
+    <script>
+        const sentences = [
+            "The quick brown fox jumps over the lazy dog.",
+            "Hello world, welcome to the typing race!",
+            "Typing fast is a skill that can be improved with practice.",
+            "Consistency is key to becoming a proficient typist."
+        ];
+
+        let sentence = sentences[Math.floor(Math.random() * sentences.length)];
+        document.getElementById("race").textContent = sentence;
+
+        let startTime;
+        let userFinished = false;
+
+        const sparkSpeed = 80; // Spark's speed in milliseconds per character
+
+        function startSparkTyping() {
+            let sparkTypingElement = document.getElementById("sparkTyping");
+            let currentIndex = 0;
+
+            function typeNextCharacter() {
+                if (currentIndex < sentence.length) {
+                    sparkTypingElement.textContent += sentence[currentIndex];
+                    currentIndex++;
+                    setTimeout(typeNextCharacter, sparkSpeed);
+                } else {
+                    checkWinner();
+                }
+            }
+
+            typeNextCharacter();
+        }
+
+        function checkTyping() {
+            let userInput = document.getElementById("userInput").value;
+            if (userInput === sentence && !userFinished) {
+                userFinished = true;
+                let endTime = new Date().getTime();
+                let userTime = (endTime - startTime) / 1000;
+                document.getElementById("result").textContent = `You finished in ${userTime.toFixed(2)} seconds.`;
+                checkWinner();
+            }
+        }
+
+        function checkWinner() {
+            let sparkTime = (sentence.length * sparkSpeed) / 1000;
+            if (userFinished) {
+                if (document.getElementById("userInput").value === sentence) {
+                    if (sparkTime < (new Date().getTime() - startTime) / 1000) {
+                        document.getElementById("result").textContent += " Spark won!";
+                    } else {
+                        document.getElementById("result").textContent += " You won!";
+                    }
+                } else {
+                    document.getElementById("result").textContent = "You made a typo! Spark wins!";
+                }
+            } else {
+                if (document.getElementById("sparkTyping").textContent === sentence) {
+                    document.getElementById("result").textContent = "Spark won!";
+                }
+            }
+        }
+
+        window.onload = () => {
+            startTime = new Date().getTime();
+            startSparkTyping();
+        };
+    </script>
+</body>
+</html>
